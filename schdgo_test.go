@@ -8,8 +8,28 @@ import (
 	"time"
 )
 
+type MockLogger struct {
+	t *testing.T
+}
+
+func (m *MockLogger) WithField(key string, value any) Logger {
+	return m
+}
+
+func (m *MockLogger) WithError(err error) Logger {
+	return m
+}
+
+func (m *MockLogger) Debug(args ...any) {
+	m.t.Log(args...)
+}
+
+func (m *MockLogger) Info(args ...any) {
+	m.t.Log(args...)
+}
+
 func TestAddAndExecutionRunOnce(t *testing.T) {
-	scheduler := NewTaskScheduler()
+	scheduler := NewTaskScheduler(WithLogger(&MockLogger{t: t}))
 	doneCh := make(chan struct{})
 
 	task := &Task{
@@ -47,7 +67,7 @@ func TestAddAndExecutionRunOnce(t *testing.T) {
 }
 
 func TestAddTaskInvalidFunction(t *testing.T) {
-	scheduler := NewTaskScheduler()
+	scheduler := NewTaskScheduler(WithLogger(&MockLogger{t: t}))
 
 	// No TaskFunc or FuncWithTaskContext provided.
 	task := &Task{
@@ -64,7 +84,7 @@ func TestAddTaskInvalidFunction(t *testing.T) {
 }
 
 func TestDuplicateTaskAdd(t *testing.T) {
-	scheduler := NewTaskScheduler()
+	scheduler := NewTaskScheduler(WithLogger(&MockLogger{t: t}))
 	task := &Task{
 		Interval: "100ms",
 		FirstRun: true,
@@ -90,7 +110,7 @@ func TestDuplicateTaskAdd(t *testing.T) {
 }
 
 func TestDelTask(t *testing.T) {
-	scheduler := NewTaskScheduler()
+	scheduler := NewTaskScheduler(WithLogger(&MockLogger{t: t}))
 	task := &Task{
 		Interval: "100ms",
 		FirstRun: true,
@@ -112,7 +132,7 @@ func TestDelTask(t *testing.T) {
 }
 
 func TestLookupTask(t *testing.T) {
-	scheduler := NewTaskScheduler()
+	scheduler := NewTaskScheduler(WithLogger(&MockLogger{t: t}))
 	task := &Task{
 		Interval: "100ms",
 		FirstRun: true,
@@ -134,7 +154,7 @@ func TestLookupTask(t *testing.T) {
 }
 
 func TestInvalidInterval(t *testing.T) {
-	scheduler := NewTaskScheduler()
+	scheduler := NewTaskScheduler(WithLogger(&MockLogger{t: t}))
 	task := &Task{
 		Interval: "not-a-duration-or-cron",
 		FirstRun: true,
@@ -147,7 +167,7 @@ func TestInvalidInterval(t *testing.T) {
 }
 
 func TestScheduleTaskWithStartAfter(t *testing.T) {
-	scheduler := NewTaskScheduler()
+	scheduler := NewTaskScheduler(WithLogger(&MockLogger{t: t}))
 	doneCh := make(chan struct{})
 	startAfter := time.Now().Add(200 * time.Millisecond)
 
@@ -185,7 +205,7 @@ func TestScheduleTaskWithStartAfter(t *testing.T) {
 }
 
 func TestCronIntervalTask(t *testing.T) {
-	scheduler := NewTaskScheduler()
+	scheduler := NewTaskScheduler(WithLogger(&MockLogger{t: t}))
 	doneCh := make(chan struct{})
 
 	// Use a cron expression that fires every second.
@@ -213,7 +233,7 @@ func TestCronIntervalTask(t *testing.T) {
 }
 
 func TestErrFuncInvocation(t *testing.T) {
-	scheduler := NewTaskScheduler()
+	scheduler := NewTaskScheduler(WithLogger(&MockLogger{t: t}))
 	errCh := make(chan error, 1)
 
 	task := &Task{
@@ -244,7 +264,7 @@ func TestErrFuncInvocation(t *testing.T) {
 }
 
 func TestRunSingleInstance(t *testing.T) {
-	scheduler := NewTaskScheduler()
+	scheduler := NewTaskScheduler(WithLogger(&MockLogger{t: t}))
 	var mu sync.Mutex
 	count := 0
 	wg := sync.WaitGroup{}
@@ -305,4 +325,14 @@ func TestClone(t *testing.T) {
 		clone.TaskContext.id != original.TaskContext.id {
 		t.Fatal("clone does not match original task properties")
 	}
+}
+
+func TestWithLogger(t *testing.T) {
+	mockLogger := &MockLogger{t: t}
+	scheduler := NewTaskScheduler(WithLogger(mockLogger))
+
+	if scheduler.logger != mockLogger {
+		t.Fatal("scheduler logger was not set correctly with WithLogger option")
+	}
+
 }

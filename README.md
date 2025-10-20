@@ -1,4 +1,8 @@
 # Go Scheduler Package
+<p align="start">
+  <img src="./assets/goschd.jpg" alt="goschd" width="350"/>
+</p>
+
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/raykavin/goschd.svg)](https://pkg.go.dev/github.com/raykavin/goschd)
 [![Lint](https://github.com/raykavin/goschd/actions/workflows/lint.yml/badge.svg)](https://github.com/raykavin/goschd/actions/workflows/lint.yml)
